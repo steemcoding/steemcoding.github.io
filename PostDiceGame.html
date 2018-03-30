@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Steem DiceGame</title>
+  </head>
+  <body>
+    <script src="https://cdn.steemjs.com/lib/latest/steem.min.js"></script>
+    <script>
+
+      function Clear(){
+        document.getElementById('input_link').value='';
+        document.getElementById('input_dice').value='100';
+        document.getElementById('title').innerHTML='';
+        document.getElementById('voters').innerHTML='';
+        document.getElementById('time').innerHTML='';
+        document.getElementById('demo').innerHTML='';
+      }
+
+      function DiceGame(){
+
+        var voters = []; //voters 게임 정보를 저장
+        var src = document.getElementById('input_link').value;
+        var arrsrc = src.split('/');
+        var idsrc = arrsrc[arrsrc.length-2].replace('@','');
+
+        var author = idsrc;
+        var permlink =  arrsrc[arrsrc.length-1];
+
+      steem.api.getContent(author, permlink, function (err, getcontent) {
+        var getactivevoters = getcontent.active_votes;
+        var diceValue =0;
+        document.getElementById("title").innerHTML= 'POST : '+ getcontent.title;
+        document.getElementById("voters").innerHTML='Voters : ' + getactivevoters.length +' (Self is excluded! Voting time priority!)';
+        document.getElementById('time').innerHTML = Date()+'<hr size="5" color=”#FF00FF” noshade/>';
+
+        for(var i=0;i<getactivevoters.length;i++){
+          if(getactivevoters[i].voter!=author){
+            diceValue = Dice(); //주사위
+             voters.push({Name: getactivevoters[i].voter, Dice: diceValue, Rank: 0, Time : getactivevoters[i].time});
+           }
+         }
+         Rank(); //순위
+         RankOutput(); //결과
+       });
+       function Dice(){ //주사위 돌리기
+         var max = document.getElementById('input_dice').value;
+         return Number(Math.floor(Math.random() * max)+1);
+       }
+
+       function Rank(){ //순위 구하기
+         var rank = 1;
+         for (var i=0; i<voters.length; i++) {
+           rank = 1;
+           for (var j=0; j<voters.length; j++) {
+             if (voters[i].Dice < voters[j].Dice) rank++;
+             else if(voters[i].Dice == voters[j].Dice){
+               if(voters[i].Time > voters[j].Time) rank++;
+             }
+           }
+           voters[i].Rank = rank;
+         }
+       }
+       function RankOutput(){ //결과값 출력
+         var RankData = '';
+         voters.sort(function(a,b){return a.Rank-b.Rank;});
+
+         for(var i=0;i<voters.length;i++){
+           RankData += '<li>'+'  <strong>[<font color="blue">'+voters[i].Name+'</font>]</strong> (Dice: '+voters[i].Dice+')   '+voters[i].Time + '</li>';
+           //console.log(ListRank);
+          }
+         document.getElementById("demo").innerHTML=RankData;
+       }
+
+     }
+   </script>
+   <div>
+      Post Link : <input type="text" id="input_link" size="70">
+      <button onclick="DiceGame()">Go!</button>
+      <button onclick="Clear()">Clear</button></br>
+      Dice Number : <input type="text" id="input_dice" size ="10" value="100">
+      <hr size="5" color=”#FF0000” noshade/>
+    </div>
+    <h2 id ='title'></h2>
+    <p id ='voters'></p>
+    <p id ='time'></p>
+    <ol id='demo'></ol>
+  </body>
+</html>
