@@ -1,4 +1,4 @@
-# Welcome to CodingManG Pages
+# Welcome to CodingMan Pages
 
 ##  The current page is being edited.
 
